@@ -5,6 +5,7 @@
 #include <string>
 #include <cstring>
 #include <cstdio>
+#include <cassert>
 
 using namespace std;
 
@@ -13,23 +14,6 @@ struct Point
     char c;
     int x;
     int y;
-    int ix, iy;
-
-    struct CompareX
-    {
-        bool operator()(const Point* l, const Point* r)
-        {
-            return (l->x) < (r->x);
-        }
-    };
-
-    struct CompareY
-    {
-        bool operator()(const Point* l, const Point* r)
-        {
-            return (l->y) < (r->y);
-        }
-    };
 };
 
 struct Rect
@@ -53,58 +37,145 @@ struct Rect
     };
 };
 
+class Line
+{
+public:
+    typedef typename vector<Point*>::iterator iterator;
+
+    explicit Line(int iSize) :
+        m_vPoint(iSize, NULL)
+    {
+    }
+    Point*& operator[](int n)
+    {
+        assert(n < m_vPoint.size());
+        return m_vPoint[n];
+    }
+    iterator begin()
+    {
+        iterator begin = m_vPoint.begin();
+        if(*begin == NULL)
+        {
+            begin = getNext(begin);
+        }
+        return begin;
+    }
+    iterator end()
+    {
+        return m_vPoint.end();
+    }
+    iterator getNext(iterator itr)
+    {
+        while(itr != m_vPoint.end())
+        {
+            ++itr;
+            if((itr != m_vPoint.end()) && (*itr != NULL))
+            {
+                break;
+            }
+        }
+        return itr;
+    }
+    iterator getNext(const Point* p)
+    {
+        int i = 0;
+        for(i = 0; i < m_vPoint.size(); ++i)
+        {
+            if(p == m_vPoint[i])
+            {
+                break;
+            }
+        }
+        return getNext(m_vPoint.begin() + i);
+    }
+    bool empty() const
+    {
+        for(int i = 0; i < m_vPoint.size(); ++i)
+        {
+            if(m_vPoint[i] != NULL)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+private:
+    vector<Point*> m_vPoint;
+};
+
+class PointMap
+{
+public:
+    typedef typename vector<Line>::iterator iterator;
+
+    PointMap(int iSizeA, int iSizeB) :
+        m_vLine(iSizeA, Line(iSizeB))
+    {
+    }
+    Line& operator[](int n)
+    {
+        assert(n < m_vLine.size());
+        return m_vLine[n];
+    }
+    iterator begin()
+    {
+        iterator begin = m_vLine.begin();
+        if(begin->empty())
+        {
+            begin = getNext(begin);
+        }
+        return begin;
+    }
+    iterator end()
+    {
+        return m_vLine.end();
+    }
+    iterator getNext(iterator itr)
+    {
+        while(itr != m_vLine.end())
+        {
+            ++itr;
+            if((itr != m_vLine.end()) && (itr->empty() == false))
+            {
+                break;
+            }
+        }
+        return itr;
+    }
+
+private:
+    vector<Line> m_vLine;
+};
+
 void _calcRects(vector<Point>& p)
 {
     // Sort input in row and col.
-    typedef map<int, vector<Point*> > PointMap;
-    PointMap row, col;
+    PointMap row(51, 51);
+    PointMap col(51, 51);
     for(int i = 0; i < p.size(); ++i)
     {
-        row[p[i].y].push_back(&p[i]);
-        col[p[i].x].push_back(&p[i]);
-    }
-    for(PointMap::iterator itr = row.begin(); itr != row.end(); ++itr)
-    {
-        sort(itr->second.begin(), itr->second.end(), Point::CompareX());
-        for(int i = 0; i < itr->second.size(); ++i)
-        {
-            itr->second[i]->ix = i;
-        }
-    }
-    for(PointMap::iterator itr = col.begin(); itr != col.end(); ++itr)
-    {
-        sort(itr->second.begin(), itr->second.end(), Point::CompareY());
-        for(int i = 0; i < itr->second.size(); ++i)
-        {
-            itr->second[i]->iy = i;
-        }
+        row[p[i].y][p[i].x] = &p[i];
+        col[p[i].x][p[i].y] = &p[i];
     }
     // Find rect for each point
     vector<Rect> ans;
-    for(PointMap::iterator itr = row.begin(); itr != row.end(); ++itr)
+    for(PointMap::iterator itr = row.begin(); itr < row.end(); itr = row.getNext(itr))
     {
-        vector<Point*>& vRow = itr->second;
-        for(int i = 0; i < vRow.size(); ++i)
+        Line& lineY = *itr;
+        for(Line::iterator itrP = lineY.begin(); itrP < lineY.end(); itrP = lineY.getNext(itrP))
         {
-            Point* p4 = vRow[i];
-            vector<Point*>& vCol = col[p4->x];
-            for(int j = p4->ix + 1; j < vRow.size(); ++j)
+            Point* p4 = *itrP;
+            Line& lineX = col[p4->x];
+            for(Line::iterator pp3 = lineY.getNext(p4); pp3 < lineY.end(); pp3 = lineY.getNext(pp3))
             {
-                Point* p3 = vRow[j];
-                for(int k = p4->iy + 1; k < vCol.size(); ++k)
+                for(Line::iterator pp1 = lineX.getNext(p4); pp1 < lineX.end(); pp1 = lineY.getNext(pp1))
                 {
-                    Point* p1 = vCol[k];
-                    if((row.find(p1->y) != row.end()) && (col.find(p3->x) != col.end()))
+                    if(row[(*pp1)->y][(*pp3)->x] != NULL)
                     {
                         //Found rect.
-                        for(int ip = 0; ip < row[p1->y].size(); ++ip)
-                        {
-                            if(row[p1->y][ip]->x == p3->x)
-                            {
-                                Point* p2 = row[p1->y][ip];
-                                ans.push_back(Rect(p1, p2, p3, p4));
-                            }
-                        }
+                        Point* p2 = row[(*pp1)->y][(*pp3)->x];
+                        ans.push_back(Rect(*pp1, p2, *pp3, p4));
                     }
                 }
             }
