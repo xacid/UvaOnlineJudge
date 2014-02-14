@@ -3,15 +3,18 @@
 #include <cstdio>
 using namespace std;
 
-int _digitation(int n)
+const int MAX = 1000001;
+int D[MAX] = {0};
+
+void _buildTable()
 {
-    int ret = n;
-    while(n > 0)
+    // D(n) = nk + n[k-1] + ... + n1 + n0
+    // D(0) = 0
+    // D(n) = D(n / 10) + (n % 10)
+    for(int i = 0; i < MAX; ++i)
     {
-        ret += n % 10;
-        n /= 10;
+        D[i] = D[i / 10] + (i % 10);
     }
-    return ret;
 }
 
 void _printSelfNum()
@@ -20,7 +23,7 @@ void _printSelfNum()
     vector<bool> vSelf(MAX, true);
     for(int i = 0; i < MAX; ++i)
     {
-        int d = _digitation(i);
+        int d = D[i] + i;
         if(d < MAX)
         {
             vSelf[d] = false;
@@ -37,6 +40,7 @@ void _printSelfNum()
 
 int main()
 {
+    _buildTable();
     _printSelfNum();
     return 0;
 }
