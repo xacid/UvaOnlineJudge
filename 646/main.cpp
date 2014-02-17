@@ -24,7 +24,7 @@ bool _removeEdge(vector< vector<bool> >& graph, const vector<int>& v4)
             int b = v4[j];
             if(false == graph[a][b])
             {
-printf("remove %c%c fail\n", a + 'A', b + 'A');
+//printf("remove %c%c fail\n", a + 'A', b + 'A');
                 return false;
             }
             graph[a][b] = false;
@@ -51,11 +51,11 @@ bool _checkAllK4(const vector< vector<bool> >& graph, vector< vector<int> >& d5)
         if((k4.size() == 4) && (_removeEdge(newGraph, k4) == true))
         {
             d5.push_back(k4);
-_printTable(k4);
-printf("\t");
+//_printTable(k4);
+//printf("\t");
         }
     }
-puts("");
+//puts("");
     if(d5.size() == 4)
     {
         return true;
@@ -63,32 +63,21 @@ puts("");
     return false;
 }
 
-int _getFirstV(const vector< vector<int> >& d, int iTable)
+bool _noEdge(const vector< vector<bool> >& graph, const vector<int>& v, int end, int p)
 {
-    vector<bool> used(16, false);
-    for(int i = 0; i < iTable; ++i)
+    for(int i = 0; i < end; ++i)
     {
-        for(int j = 0; j < 4; ++j)
+        if(false == graph[v[i]][p])
         {
-            used[d[i][j]] = true;
+            return true;
         }
     }
-    for(int i = 0; i < 16; ++i)
-    {
-        if(false == used[i])
-        {
-            return i;
-        }
-    }
-
-    assert(0);
-    return 0;
+    return false;
 }
 
-bool _make(vector< vector<bool> >& graph, vector< vector<int> >& d4, int iTable)
+bool _make(const vector< vector<bool> >& graph, vector< vector<int> >& d4, vector<bool>& vAssigned, int iT, int iE, int iA)
 {
-printf("%s, %d\n", __FILE__, __LINE__);
-    if(iTable == 4)
+    if(iT == 4)
     {
         vector< vector<int> > dummy;
         if(_checkAllK4(graph, dummy) == true)
@@ -98,39 +87,40 @@ printf("%s, %d\n", __FILE__, __LINE__);
         return false;
     }
 
-    vector< vector<bool> > origGraph(graph);
-    vector<int>& k4 = d4[iTable];
-    k4[0] = _getFirstV(d4, iTable);
-    for(int i = k4[0] + 1; i < 16; ++i)
+    for(int i = iA; i < vAssigned.size(); ++i)
     {
-        if(origGraph[k4[0]][i] == false)
+        if(false == vAssigned[i])
         {
-            continue;
-        }
-        for(int j = i + 1; j < 16; ++j)
-        {
-            if(origGraph[k4[0]][j] == false)
+            if(_noEdge(graph, d4[iT], iE, i))
             {
                 continue;
             }
-            for(int k = j + 1; k < 16; ++k)
+
+            vAssigned[i] = true;
+            d4[iT][iE] = i;
+            if(3 == iE)
             {
-                if(origGraph[k4[0]][k] == false)
-                {
-                    continue;
-                }
-                k4[1] = i;
-                k4[2] = j;
-                k4[3] = k;
-_printTable(k4); printf("\n");
-                graph = origGraph;
-                if(_removeEdge(graph, k4) &&_make(graph, d4, iTable + 1))
+                if(_make(graph, d4, vAssigned, iT + 1, 0, 0))
                 {
                     return true;
                 }
             }
+            else
+            {
+                if(_make(graph, d4, vAssigned, iT, iE + 1, i + 1))
+                {
+                    return true;
+                }
+            }
+
+            vAssigned[i] = false;
+            if(0 == iE)
+            {
+                break;
+            }
         }
     }
+
     return false;
 }
 
@@ -163,7 +153,8 @@ int main()
             puts("");
         }
         vector< vector<int> > d4(4, vector<int>(4, 0));
-        if(_make(graph, d4, 0) == false)
+        vector<bool> vAssigned(16, false);
+        if(_make(graph, d4, vAssigned, 0, 0, 0) == false)
         {
             puts("It is not possible to complete this schedule.");
         }
@@ -171,7 +162,34 @@ int main()
         {
             vector< vector<int> > d5;
             _checkAllK4(graph, d5);
-            puts("Impossible?");
+            for(int i = 0; i < 12; ++i)
+            {
+                printf("%s", vIn[i].c_str());
+                if(i % 4 == 3)
+                {
+                    puts("\n");
+                }
+                else
+                {
+                    printf("\t");
+                }
+            }
+            for(int i = 0; i < 4; ++i)
+            {
+                if(i > 0)
+                {
+                    printf("\t");
+                }
+                _printTable(d4[i]);
+            }
+            for(int i = 0; i < 4; ++i)
+            {
+                if(i > 0)
+                {
+                    printf("\t");
+                }
+                _printTable(d5[i]);
+            }
         }
         ++idx;
     }
