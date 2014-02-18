@@ -1,6 +1,14 @@
+/********************************************************************
+ * 646 - The Gourmet Club, OVa Online Judge
+ * http://uva.onlinejudge.org/external/6/646.html
+ * Remark:
+ * 1. "Echo the input" must be exactly the same. Use getline().
+ ********************************************************************/
+
 #include <iostream>
 #include <string>
 #include <vector>
+#include <sstream>
 #include <cassert>
 #include <cstdio>
 
@@ -89,14 +97,30 @@ int main()
 {
     int idx = 0;
     string sIn;
-    while(cin >> sIn)
+    char buf[80];
+    while(cin.getline(buf, 80))
     {
         // Input
-        vector<string> vIn(12, string(4, 'A'));
-        vIn[0] = sIn;
-        for(int i = 1; i < 12; ++i)
+        vector<string> vEcho;
+        vEcho.push_back(string(buf));
+        for(int i = 1; i < 3; ++i)
         {
-            cin >> vIn[i];
+            cin.getline(buf, 80);
+            vEcho.push_back(string(buf));
+        }
+        cin.getline(buf, 80);
+        // Reformat
+        vector<string> vIn;
+        for(int i = 0; i < 3; ++i)
+        {
+            stringstream ss;
+            ss.str(vEcho[i]);
+            for(int j = 0; j < 4; ++j)
+            {
+                string s;
+                ss >> s;
+                vIn.push_back(s);
+            }
         }
         Graph graph(16, vector<bool>(16, false));
         Schedule sched(5, vector<Table>(4, Table(4, 0)));
@@ -126,7 +150,11 @@ int main()
         }
         else
         {
-            for(int i = 0; i < 5; ++i)
+            for(int i = 0; i < 3; ++i)
+            {
+                puts(vEcho[i].c_str());
+            }
+            for(int i = 3; i < 5; ++i)
             {
                 for(int j = 0; j < 4; ++j)
                 {
