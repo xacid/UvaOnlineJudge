@@ -6,7 +6,11 @@
 
 using namespace std;
 
-void _printTable(const vector<int>& table)
+typedef vector< vector<bool> >      Graph;
+typedef vector<int>                 Table;
+typedef vector< vector<Table> >     Schedule;
+
+void _printTable(const Table& table)
 {
     for(int i = 0; i < table.size(); ++i)
     {
@@ -14,113 +18,70 @@ void _printTable(const vector<int>& table)
     }
 }
 
-bool _removeEdge(vector< vector<bool> >& graph, const vector<int>& v4)
+bool _setAllEdge(Graph& graph, const Table& tab, int numPer, int per, const bool val)
 {
-    for(int i = 0; i < 4; ++i)
+    for(int i = 0; i < numPer; ++i)
     {
-        for(int j = i + 1; j < 4; ++j)
+        if(val == graph[tab[i]][per])
         {
-            int a = v4[i];
-            int b = v4[j];
-            if(false == graph[a][b])
-            {
-//printf("remove %c%c fail\n", a + 'A', b + 'A');
-                return false;
-            }
-            graph[a][b] = false;
-            graph[b][a] = false;
+            return false;
         }
+    }
+    for(int i = 0; i < numPer; ++i)
+    {
+        graph[tab[i]][per] = val;
     }
     return true;
 }
 
-bool _checkAllK4(const vector< vector<bool> >& graph, vector< vector<int> >& d5)
+bool _make(Graph& graph, Schedule& sched, vector<bool>& vAssign, int iD, int iT, int iE, int iA)
 {
-    vector< vector<bool> > newGraph(graph);
-    for(int i = 0; i < 16; ++i)
-    {
-        vector<int> k4;
-        k4.push_back(i);
-        for(int j = i + 1; j < 16; ++j)
-        {
-            if(newGraph[i][j] == true)
-            {
-                k4.push_back(j);
-            }
-        }
-        if((k4.size() == 4) && (_removeEdge(newGraph, k4) == true))
-        {
-            d5.push_back(k4);
-//_printTable(k4);
-//printf("\t");
-        }
-    }
-//puts("");
-    if(d5.size() == 4)
+    if(5 == iD)
     {
         return true;
     }
-    return false;
-}
 
-bool _noEdge(const vector< vector<bool> >& graph, const vector<int>& v, int end, int p)
-{
-    for(int i = 0; i < end; ++i)
+    vector<bool> origAssign(vAssign);
+    if(0 == iE)
     {
-        if(false == graph[v[i]][p])
+        iA = 0;
+    }
+    if((0 == iT) && (0 == iE))
+    {
+        vAssign = vector<bool>(16, false);
+    }
+    for(int i = iA; i < vAssign.size(); ++i)
+    {
+        if(vAssign[i] ||
+            (_setAllEdge(graph, sched[iD][iT], iE, i, true) == false))
+        {
+            continue;
+        }
+        sched[iD][iT][iE] = i;
+
+        int nE = iE + 1;
+        int nT = iT;
+        int nD = iD;
+        if(4 == nE)
+        {
+            nE = 0;
+            nT += 1;
+        }
+        if(4 == nT)
+        {
+            nT = 0;
+            nD += 1;
+        }
+        vAssign[i] = true;
+        if(_make(graph, sched, vAssign, nD, nT, nE, i))
         {
             return true;
         }
-    }
-    return false;
-}
-
-bool _make(const vector< vector<bool> >& graph, vector< vector<int> >& d4, vector<bool>& vAssigned, int iT, int iE, int iA)
-{
-    if(iT == 4)
-    {
-        vector< vector<int> > dummy;
-        if(_checkAllK4(graph, dummy) == true)
-        {
-            return true;
-        }
-        return false;
+        _setAllEdge(graph, sched[iD][iT], iE, i, false);
+        vAssign[i] = false;
     }
 
-    for(int i = iA; i < vAssigned.size(); ++i)
-    {
-        if(false == vAssigned[i])
-        {
-            if(_noEdge(graph, d4[iT], iE, i))
-            {
-                continue;
-            }
-
-            vAssigned[i] = true;
-            d4[iT][iE] = i;
-            if(3 == iE)
-            {
-                if(_make(graph, d4, vAssigned, iT + 1, 0, 0))
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                if(_make(graph, d4, vAssigned, iT, iE + 1, i + 1))
-                {
-                    return true;
-                }
-            }
-
-            vAssigned[i] = false;
-            if(0 == iE)
-            {
-                break;
-            }
-        }
-    }
-
+    vAssign = origAssign;
     return false;
 }
 
@@ -137,58 +98,40 @@ int main()
         {
             cin >> vIn[i];
         }
-        vector< vector<bool> > graph(16, vector<bool>(16, true));
+        Graph graph(16, vector<bool>(16, false));
+        Schedule sched(5, vector<Table>(4, Table(4, 0)));
         for(int i = 0; i < 12; ++i)
         {
             vector<int> vertice(4, 0);
             for(int j = 0; j < vIn[i].size(); ++j)
             {
-                vertice[j] = vIn[i][j] - 'A';
+                sched[i / 4][i % 4][j] = vIn[i][j] - 'A';
+                _setAllEdge(graph, sched[i / 4][i % 4], j, vIn[i][j] - 'A', true);
             }
-            _removeEdge(graph, vertice);
         }
         // Print
         if(idx > 0)
         {
             puts("");
         }
-        vector< vector<int> > d4(4, vector<int>(4, 0));
         vector<bool> vAssigned(16, false);
-        if(_make(graph, d4, vAssigned, 0, 0, 0) == false)
+        if(_make(graph, sched, vAssigned, 3, 0, 0, 0) == false)
         {
             puts("It is not possible to complete this schedule.");
         }
         else
         {
-            vector< vector<int> > d5;
-            _checkAllK4(graph, d5);
-            for(int i = 0; i < 12; ++i)
+            for(int i = 0; i < 5; ++i)
             {
-                printf("%s", vIn[i].c_str());
-                if(i % 4 == 3)
+                for(int j = 0; j < 4; ++j)
                 {
-                    puts("\n");
+                    if(j > 0)
+                    {
+                        fputs("\t", stdout);
+                    }
+                    _printTable(sched[i][j]);
                 }
-                else
-                {
-                    printf("\t");
-                }
-            }
-            for(int i = 0; i < 4; ++i)
-            {
-                if(i > 0)
-                {
-                    printf("\t");
-                }
-                _printTable(d4[i]);
-            }
-            for(int i = 0; i < 4; ++i)
-            {
-                if(i > 0)
-                {
-                    printf("\t");
-                }
-                _printTable(d5[i]);
+                puts("");
             }
         }
         ++idx;
