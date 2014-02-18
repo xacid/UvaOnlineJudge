@@ -1,3 +1,8 @@
+/********************************************************************
+ * 647 - Chutes and Ladders, OVa Online Judge
+ * http://uva.onlinejudge.org/external/6/647.html
+ ********************************************************************/
+
 #include <iostream>
 #include <vector>
 #include <cstdio>
