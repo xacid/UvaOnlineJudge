@@ -3,6 +3,7 @@
  * http://uva.onlinejudge.org/external/6/646.html
  * Remark:
  * 1. "Echo the input" must be exactly the same. Use getline().
+ * 2. The input is always valid, no any pair of person eat twice.
  ********************************************************************/
 
 #include <iostream>
