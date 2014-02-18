@@ -42,11 +42,7 @@ _printDay(sched[4]);
 puts("");
             return false;
         }
-//printf("d %ld t %ld per %ld a %ld\n", day, tab, per, asn);
-if(4 == day)
-{
-    //return true;
-}
+
         vector<bool> origAssign(vAssign);
         int iAssign = 0;
         if(0 != per)
@@ -62,6 +58,11 @@ if(4 == day)
             if(true == vAssign[i])
             {
                 continue;
+            }
+            bool bBreak = false;
+            if(0 == per)
+            {
+                bBreak = true;
             }
             if(_addEdge(sched[day][tab], per, i) == false)
             {
@@ -90,6 +91,11 @@ if(4 == day)
             }
             _removeEdge(sched[day][tab], per, i);
             vAssign[i] = false;
+
+            if(true == bBreak)
+            {
+                break;
+            }
         }
         vAssign = origAssign;
         return false;

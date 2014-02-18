@@ -6,6 +6,26 @@ ABCD	EFGH	IJKL	MNOP
 AEIM	BFJN	CGKO	DHLP
 AFKP	BELO	CHIN	DGJM
 
-BELO    CHIN    AFKP    DGJM
+ABCD    EFGH    IJKL    MNOP
 ABCD    EFGH    IJKL    MNOP
 AEIM    BFJN    CGKO    DHLP
+
+ABCD    EFGH    IJKL    MNOP    
+AELN    BHIO    CFKP    DGJM    
+AHJP    BEKM    CGIN    DFLO    
+
+ABCD    EFGH    IJKL    MNOP    
+AELN    BHIO    CFKP    DGJM    
+AHKM    BEJP    CGLO    DFIN    
+
+ABCD    EFGH    IJKL    MNOP    
+AELN    BHIO    CFKP    DGJM    
+AHKM    BEJP    CGLO    DFIN    
+
+ABCD    EFGH    IJKL    MNOP    
+AELN    BHIO    CGJM    DFKP    
+AFIM    BGLP    CHKN    DEJO    
+
+ABCD    EFGH    IJKL    MNOP    
+AELN    BHIO    CGJM    DFKP    
+AFIM    BGLP    CHKN    DEJO    

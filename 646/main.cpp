@@ -100,13 +100,17 @@ int main()
         }
         Graph graph(16, vector<bool>(16, false));
         Schedule sched(5, vector<Table>(4, Table(4, 0)));
+        bool bInputError = false;
         for(int i = 0; i < 12; ++i)
         {
             vector<int> vertice(4, 0);
             for(int j = 0; j < vIn[i].size(); ++j)
             {
                 sched[i / 4][i % 4][j] = vIn[i][j] - 'A';
-                _setAllEdge(graph, sched[i / 4][i % 4], j, vIn[i][j] - 'A', true);
+                if(_setAllEdge(graph, sched[i / 4][i % 4], j, vIn[i][j] - 'A', true) == false)
+                {
+                    bInputError = true;
+                }
             }
         }
         // Print
@@ -115,7 +119,8 @@ int main()
             puts("");
         }
         vector<bool> vAssigned(16, false);
-        if(_make(graph, sched, vAssigned, 3, 0, 0, 0) == false)
+        if((true == bInputError) ||
+            (_make(graph, sched, vAssigned, 3, 0, 0, 0) == false))
         {
             puts("It is not possible to complete this schedule.");
         }
