@@ -1,6 +1,26 @@
 /********************************************************************
  * 649 - You Who?, OVa Online Judge
  * http://uva.onlinejudge.org/external/6/649.html
+ * Remark:
+ * 1. There are two basic problems: (a) number of inrtoductions
+ *    on a graph (b) separate them with min intro
+ * 2. Problem (a) (b) takes too long for exhausted search N = 24.
+ * 3. This is still WA, following guessing must be verified.
+ * 4. For (a), consider the inverse graph G. If G is connect, it
+ *    seems the number of introduction is
+ *        max(k, ceil(m / floor(n/2)))
+ *    where
+ *        k: the max degree of G
+ *        m: the number of edges of G
+ *        n: the number of vertices of G (inversed, not the original)
+ *    If G is not connected, just separate G to smaller connected
+ *    graphs, and find max among them. 
+ *    Define this function as A(G).
+ * 5. For (b), it seems separate N students to groups S, T equally.
+ *    Find s in S, t in T that exchanging (s, t) minimize
+ *        max(A(S), A(T)).
+ *    Repeat this until no such s, t found, then S, T are solution.
+ * 6. If item 4. is correct, verify item 5. takes 1 min. for N = 24.
  ********************************************************************/
 #include <iostream>
 #include <vector>
