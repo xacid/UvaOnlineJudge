@@ -121,6 +121,8 @@ public:
     }
 
 private:
+    typedef vector<int> ConnectedVertice;
+
     vector<Point> m_vEdge;
     int m_iSize;
     vector<bool> m_vAsgn;
@@ -141,75 +143,84 @@ private:
 
     int _calcTime(const vector<bool>& asgn, const bool val) const
     {
-#if 0
-++s_iCalcTimeCount;
-return 0;
-#endif
-        // Calc degrees
-        vector< pair<int, int> > vVtc;
+        // Find all connected in inverse graph
+        ConnectedVertice cAllVertice;
         for(int i = 0; i < m_iSize; ++i)
         {
-            if(val != asgn[i])
+            if(val == asgn[i])
             {
-                continue;
-            }
-            vVtc.push_back(make_pair(i, 0));
-            for(int j = 0; j < m_iSize; ++j)
-            {
-                if(val != asgn[j])
-                {
-                    continue;
-                }
-                if(m_vEdge[i][j])
-                {
-                    ++vVtc.back().second;
-                }
+                cAllVertice.push_back(i);
             }
         }
-        int iTime = 0;
-        while(_getMinDeg(vVtc) < (vVtc.size() - 1))
+        vector<ConnectedVertice> vCon;
+        while(cAllVertice.size() > 0)
         {
-            sort(vVtc.begin(), vVtc.end(), DegreeGTE());
-            vector< pair<int, int>* > vQue;
-            while(vQue.size() > 1)
+            ConnectedVertice c;
+            c.push_back(cAllVertice[0]);
+            cAllVertice.erase(cAllVertice.begin());
+            int iCon = 0;
+            while(iCon < c.size())
             {
-                
-            }
-            vector<bool> vAdded(vVtc.size(), false);
-            for(int i = 0; i < vVtc.size(); ++i)
-            {
-                if((true == vAdded[i]) || ((vVtc.size() - 1) == vVtc[i].second))
+                int iChk = 0;
+                while(iChk < cAllVertice.size())
                 {
-                    continue;
-                }
-                for(int j = i + 1; j < vVtc.size(); ++j)
-                {
-                    if((true == vAdded[j]) || ((vVtc.size() - 1) == vVtc[j].second))
+                    if(true == m_vEdge[c[iCon]][cAllVertice[iChk]])
                     {
+                        ++iChk;
                         continue;
                     }
-                    if(false == vEdge[i][j])
-                    {
-                        vEdge[i][j] = true;
-                        ++vVtc[i].second;
-                        ++vVtc[j].second;
-                        vAdded[i] = true;
-                        vAdded[j] = true;
-                        break;
-                    }
+                    c.push_back(cAllVertice[iChk]);
+                    cAllVertice.erase(cAllVertice.begin() + iChk);
                 }
+                ++iCon;
             }
-            ++iTime;
+            vCon.push_back(c);
         }
-        return iTime;
+        // Find the max time for each connected graph
+        int iMax = 0;
+        for(int i = 0; i < vCon.size(); ++i)
+        {
+            int iTime = _calcTimeConnect(vCon[i]);
+            if(iTime > iMax)
+            {
+                iMax = iTime;
+            }
+        }
+        return iMax;
     }
-    int _addEdges(const vector<Point>& vOrig, const vector< pair<int, int> >& vVtc)
+    int _calcTimeConnect(const ConnectedVertice& vCon) const
     {
-        if(_getMinDeg(vVtc) == (vVtc.size() - 1))
+        if(vCon.size() < 2)
         {
             return 0;
         }
-
+        // Find max degree and edge count
+        int iMaxDeg = 0;
+        int iEdgeCnt = 0;
+        for(int i = 0; i < vCon.size(); ++i)
+        {
+            int iDeg = 0;
+            for(int j = i + 1; j < vCon.size(); ++j)
+            {
+                if(false == m_vEdge[vCon[i]][vCon[j]])
+                {
+                    ++iEdgeCnt;
+                }
+            }
+            for(int j = 0; j < vCon.size(); ++j)
+            {
+                if((i != j) && (false == m_vEdge[vCon[i]][vCon[j]]))
+                {
+                    ++iDeg;
+                }
+            }
+            if(iDeg > iMaxDeg)
+            {
+                iMaxDeg = iDeg;
+            }
+        }
+        int iAddNum = vCon.size() / 2;
+        return max(iMaxDeg, (iEdgeCnt + iAddNum - 1) / iAddNum);
     }
 };
 
