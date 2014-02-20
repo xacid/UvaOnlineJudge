@@ -1,6 +1,10 @@
 /********************************************************************
  * 648 - Stamps (II), OVa Online Judge
  * http://uva.onlinejudge.org/external/6/648.html
+ * Remark:
+ * 1. Print stamps in "non-decreasing order", which ned to sort.
+ * 2. Becareful the "best" is max num type, *min* num stamp,
+ *    max signle value.
  ********************************************************************/
 #include <iostream>
 #include <vector>

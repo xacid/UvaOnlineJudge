@@ -56,6 +56,47 @@ public:
         vAsgn[depth] = false;
         search(depth + 1, vAsgn, iNumAsgn);
     }
+    void search2()
+    {
+        // Assign first half
+        vector<bool> vAsgn(m_iSize, false);
+        for(int i = 0; i < m_iSize / 2; ++i)
+        {
+            vAsgn[i] = true;
+        }
+        _checkMin(vAsgn);
+        // Swap to find min
+        while(true)
+        {
+            bool bFound = false;
+            for(int iT = 0; iT < m_iSize; ++iT)
+            {
+                if(true != vAsgn[iT])
+                {
+                    continue;
+                }
+                for(int iF = 0; iF < m_iSize; ++iF)
+                {
+                    if(false != vAsgn[iF])
+                    {
+                        continue;
+                    }
+                    vAsgn[iT] = false;
+                    vAsgn[iF] = true;
+                    if(_checkMin(vAsgn) == true)
+                    {
+                        bFound = true;
+                    }
+                    vAsgn[iT] = true;
+                    vAsgn[iF] = false;
+                }
+            }
+            if(false == bFound)
+            {
+                break;
+            }
+        }
+    }
     void print() const
     {
         printf("%ld\n", m_iMin);
@@ -77,7 +118,7 @@ public:
             }
         }
         puts("");
-printf("s_iCalcTimeCount %ld\n", s_iCalcTimeCount);
+//printf("s_iCalcTimeCount %ld\n", s_iCalcTimeCount);
     }
 
 private:
@@ -86,7 +127,20 @@ private:
     vector<bool> m_vAsgn;
     int m_iMin;
 
-    int _calcTime(const vector<bool>& asgn, const bool val)
+    bool _checkMin(const vector<bool>& asgn)
+    {
+        int iT1 = _calcTime(asgn, true);
+        int iT2 = _calcTime(asgn, false);
+        if(max(iT1, iT2) < m_iMin)
+        {
+            m_vAsgn = asgn;
+            m_iMin = max(iT1, iT2);
+            return true;
+        }
+        return false;
+    }
+
+    int _calcTime(const vector<bool>& asgn, const bool val) const
     {
 #if 0
 ++s_iCalcTimeCount;
@@ -130,7 +184,7 @@ return 0;
         int addEdegNum = iNumPerson / 2;
         return max(iNumPerson - iMinDegree - 1, (iNeedEdge + addEdegNum - 1) / addEdegNum);
     }
-    int _getNumPerson(const vector<bool>& asgn, const bool val)
+    int _getNumPerson(const vector<bool>& asgn, const bool val) const
     {
         int iRet = 0;
         for(int i = 0; i < m_iSize; ++i)
@@ -164,7 +218,8 @@ int main()
         }
 s_iCalcTimeCount = 0;
         vector<bool> vAsgn(iNum, false);
-        graph.search(0, vAsgn, 0);
+        //graph.search(0, vAsgn, 0);
+        graph.search2();
 
         if(iCount > 0)
         {
