@@ -100,7 +100,7 @@ public:
     void print() const
     {
         printf("%ld\n", m_iMin);
-        printf("1");
+        printf("%ld", m_iSize / 2);
         for(int i = 0; i < m_iSize; ++i)
         {
             if(true == m_vAsgn[i])
@@ -108,8 +108,7 @@ public:
                 printf(" %ld", i + 1);
             }
         }
-        puts("");
-        printf("2");
+        printf("\n%ld", m_iSize - (m_iSize / 2));
         for(int i = 0; i < m_iSize; ++i)
         {
             if(false == m_vAsgn[i])
@@ -146,21 +145,15 @@ private:
 ++s_iCalcTimeCount;
 return 0;
 #endif
-        int iMinDegree = m_iSize;
-        int iNumPerson = _getNumPerson(asgn, val);
-        if(iNumPerson < 2)
-        {
-            return 0;
-        }
-        int iNeedEdge = 0;
+        // Calc degrees
+        vector< pair<int, int> > vVtc;
         for(int i = 0; i < m_iSize; ++i)
         {
             if(val != asgn[i])
             {
                 continue;
             }
-
-            int iDeg = 0;
+            vVtc.push_back(make_pair(i, 0));
             for(int j = 0; j < m_iSize; ++j)
             {
                 if(val != asgn[j])
@@ -169,32 +162,54 @@ return 0;
                 }
                 if(m_vEdge[i][j])
                 {
-                    ++iDeg;
+                    ++vVtc.back().second;
                 }
-                else if(i < j)
-                {
-                    ++iNeedEdge;
-                }
-            }
-            if(iDeg < iMinDegree)
-            {
-                iMinDegree = iDeg;
             }
         }
-        int addEdegNum = iNumPerson / 2;
-        return max(iNumPerson - iMinDegree - 1, (iNeedEdge + addEdegNum - 1) / addEdegNum);
-    }
-    int _getNumPerson(const vector<bool>& asgn, const bool val) const
-    {
-        int iRet = 0;
-        for(int i = 0; i < m_iSize; ++i)
+        int iTime = 0;
+        while(_getMinDeg(vVtc) < (vVtc.size() - 1))
         {
-            if(val == asgn[i])
+            sort(vVtc.begin(), vVtc.end(), DegreeGTE());
+            vector< pair<int, int>* > vQue;
+            while(vQue.size() > 1)
             {
-                ++iRet;
+                
             }
+            vector<bool> vAdded(vVtc.size(), false);
+            for(int i = 0; i < vVtc.size(); ++i)
+            {
+                if((true == vAdded[i]) || ((vVtc.size() - 1) == vVtc[i].second))
+                {
+                    continue;
+                }
+                for(int j = i + 1; j < vVtc.size(); ++j)
+                {
+                    if((true == vAdded[j]) || ((vVtc.size() - 1) == vVtc[j].second))
+                    {
+                        continue;
+                    }
+                    if(false == vEdge[i][j])
+                    {
+                        vEdge[i][j] = true;
+                        ++vVtc[i].second;
+                        ++vVtc[j].second;
+                        vAdded[i] = true;
+                        vAdded[j] = true;
+                        break;
+                    }
+                }
+            }
+            ++iTime;
         }
-        return iRet;
+        return iTime;
+    }
+    int _addEdges(const vector<Point>& vOrig, const vector< pair<int, int> >& vVtc)
+    {
+        if(_getMinDeg(vVtc) == (vVtc.size() - 1))
+        {
+            return 0;
+        }
+
     }
 };
 
