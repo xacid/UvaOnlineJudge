@@ -1,6 +1,8 @@
 /********************************************************************
  * 650 - Bowl, OVa Online Judge
  * http://uva.onlinejudge.org/external/6/650.html
+ * Remark:
+ * 1. Must remove all unnecessary spaces between name, frames, scores.
  ********************************************************************/
 #include <iostream>
 #include <vector>
