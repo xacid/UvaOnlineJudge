@@ -1,3 +1,7 @@
+/********************************************************************
+ * 650 - Bowl, OVa Online Judge
+ * http://uva.onlinejudge.org/external/6/650.html
+ ********************************************************************/
 #include <iostream>
 #include <vector>
 #include <string>
@@ -53,7 +57,6 @@ int main()
         stringstream ss(buf);
         string sName;
         ss >> sName;
-        sName += string(12 - sName.size(), ' ');
         vector<int> vStand;
         int iStand = 0;
         while(ss >> iStand)
@@ -69,17 +72,20 @@ int main()
         printf("%s", sName.c_str());
         int iBall = 0;
         int iFrame = 0;
+        int iIndent = 12 - sName.size() + 1;
         while(iBall < vStand.size())
         {
             iFrame += 1;
-            fputs(" ", stdout);
+            string sIndent(iIndent, ' ');
+            fputs(sIndent.c_str(), stdout);
+            iIndent = 2;
             if(0 == vStand[iBall])
             {
                 // Strike
                 _printDigit(10 - vStand[iBall]);
                 if(iFrame < 10)
                 {
-                    fputs("  ", stdout);
+                    ++iIndent;
                     iBall += 1;
                     continue;
                 }
@@ -98,14 +104,14 @@ int main()
                 }
                 break;
             }
-            fputs(" ", stdout);
             iBall += 2;
         }
-        fputs("\n            ", stdout);
+        puts("");
         // Print scores
         bool bFirst = true;
-        iFrame = 1;
         int iTotal = 0;
+        iFrame = 1;
+        iIndent = 12;
         for(int i = 0; (i < vStand.size()) && (iFrame <= 10); ++i)
         {
             if(true == bFirst)
@@ -139,9 +145,12 @@ int main()
                     iTotal += 10 - vStand[i + 1];
                 }
             }
+            string sIndent(iIndent, ' ');
+            fputs(sIndent.c_str(), stdout);
             printf("%4ld", iTotal);
             bFirst = true;
             ++iFrame;
+            iIndent = 0;
         }
         puts("");
     }
