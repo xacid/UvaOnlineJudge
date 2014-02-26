@@ -1,0 +1,4 @@
+This project contains my solutions to http://uva.onlinejudge.org .
+Each folder is named by the problem number, and it has the solution
+and relative data, such as input, to the problem.
+Almost all solutions are written in C++.
