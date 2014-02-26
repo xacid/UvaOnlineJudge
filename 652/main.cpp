@@ -9,17 +9,81 @@
 #include <cstdio>
 using namespace std;
 
+template<unsigned int N>
+struct Factory
+{
+    static const unsigned int VALUE = N * Factory<N - 1>::VALUE;
+};
+template<>
+struct Factory<0>
+{
+    static const unsigned int VALUE = 1;
+};
+
+static const unsigned int s_auFact[10] = 
+{
+    Factory<0>::VALUE,
+    Factory<1>::VALUE,
+    Factory<2>::VALUE,
+    Factory<3>::VALUE,
+    Factory<4>::VALUE,
+    Factory<5>::VALUE,
+    Factory<6>::VALUE,
+    Factory<7>::VALUE,
+    Factory<8>::VALUE,
+    Factory<9>::VALUE
+};
+
+template<unsigned int N, class T>
+class Permutation
+{
+public:
+    static unsigned int calcIndex(const vector<T>& vSeq)
+    {
+        unsigned int iRet = 0;
+        for(unsigned int i = 0; i < N; ++i)
+        {
+            iRet += s_auFact[N - i - 1] *
+                _getGtCount(vSeq[i], vSeq.begin() + i + 1, vSeq.end());
+        }
+        return iRet;
+    }
+    static unsigned int calcInversion(const vector<T>& vSeq)
+    {
+        unsigned int iRet = 0;
+        for(unsigned int i = 0; i < N; ++i)
+        {
+            iRet += _getGtCount(vSeq[i], vSeq.begin() + i + 1, vSeq.end());
+        }
+        return iRet;
+    }
+private:
+    typedef typename vector<T>::const_iterator Iterator;
+    static unsigned int _getGtCount(const T& val, Iterator first, Iterator last)
+    {
+        unsigned int iRet = 0;
+        while(first < last)
+        {
+            if(val > *(first++))
+            {
+                ++iRet;
+            }
+        }
+        return iRet;
+    }
+};
+
 class Puzzle
 {
 public:
     typedef vector< vector< char> > Board;
     explicit Puzzle(const vector<char>& vIn) :
         m_vOrig(3, vector<char>(3, '0')),
-        m_vSolution(),
         m_bFound(false),
         m_vBoardStep(),
         m_vParent(),
-        m_vDir()
+        m_vDir(),
+        m_bVisited(Factory<9>::VALUE, false)
     {
         for(int i = 0; i < 3; ++i)
         {
@@ -28,70 +92,6 @@ public:
                 m_vOrig[i][j] = vIn[i * 3 + j];
             }
         }
-    }
-    void solve()
-    {
-        int iX = 0, iY = 0;
-        _findX(m_vOrig, iX, iY);
-printf("char %c x %ld y %ld\n", m_vOrig[iX][iY], iX, iY);
-        m_vBoardStep.resize(10);
-        m_vBoardStep[0] = m_vOrig;
-        if(solve(0, iX, iY) == true)
-        {
-            m_bFound = true;
-        }
-    }
-    bool solve(int depth, int iX, int iY)
-    {
-        static const char acUrdl[] = {'u', 'r', 'd', 'l'};
-        static const int aiDir[][2] = { {-1, 0}, {0, 1}, {1, 0}, {0, -1}};
-        vector<Board> vBoard(E_DIR_MAX, Board(3, vector<char>(3, '0')));
-        vector<Priority> vScore;
-        Board board(m_vBoardStep[depth]);
-printf("depth %ld x %ld y %ld\n", depth, iX, iY);
-_print(board);
-        for(int d = E_UP; d < E_DIR_MAX; ++d)
-        {
-            int iX2 = iX + aiDir[d][0];
-            int iY2 = iY + aiDir[d][1];
-            if((iX2 >= 0) && (iX2 < 3) && (iY2 >= 0) && (iY2 < 3))
-            {
-                swap(board[iX][iY], board[iX2][iY2]);
-                if(_checkCycle(board, depth) == false)
-                {
-                    Priority p;
-                    vBoard[d] = board;
-                    p.pBoard = &vBoard[d];
-                    p.iScore = _calcScore(board);
-                    p.enDir = (EN_DIR)d;
-                    vScore.push_back(p);
-                    if(8 == p.iScore)
-                    {
-                        m_vSolution.push_back(acUrdl[d]);
-                        return true;
-                    }
-                }
-                swap(board[iX][iY], board[iX2][iY2]);
-            }
-        }
-        if(vScore.empty() == true)
-        {
-            return false;
-        }
-        sort(vScore.begin(), vScore.end());
-        for(int i = 0; i < vScore.size(); ++i)
-        {
-            int iX2 = iX + aiDir[vScore[i].enDir][0];
-            int iY2 = iY + aiDir[vScore[i].enDir][1];
-            m_vBoardStep.resize(depth + 2);
-            m_vBoardStep[depth + 1] = *(vScore[i].pBoard);
-            if(solve(depth + 1, iX2, iY2) == true)
-            {
-                m_vSolution.push_back(acUrdl[vScore[i].enDir]);
-                return true;
-            }
-        }
-        return false;
     }
     bool solveBfs()
     {
@@ -111,7 +111,7 @@ _print(board);
             int iX = 0, iY = 0;
             _findX(board, iX, iY);
 //_print(board);
-//printf("iCur %ld x %ld y %ld\n", iCur, iX, iY);
+//printf("iCur %ld x %ld y %ld iBoardIdx %ld\n", iCur, iX, iY, _calcBoardIdx(board));
             for(int d = E_UP; d < E_DIR_MAX; ++d)
             {
                 int iX2 = iX + aiDir[d][0];
@@ -119,14 +119,17 @@ _print(board);
                 if((iX2 >= 0) && (iX2 < 3) && (iY2 >= 0) && (iY2 < 3))
                 {
                     swap(board[iX][iY], board[iX2][iY2]);
-                    if(_checkCycle(board, iCur) == false)
+                    int iBoardIdx = _calcBoardIdx(board);
+                    if(false == m_bVisited[iBoardIdx])
                     {
                         m_vBoardStep.push_back(board);
                         m_vParent.push_back(iCur);
                         m_vDir.push_back((EN_DIR)d);
-                        if(8 == _calcScore(board))
+                        m_bVisited[iBoardIdx] = true;
+                        if(0 == iBoardIdx)
                         {
-printf("iCur %ld size %ld\n", iCur, m_vParent.size());
+//_print(board);
+//printf("iCur %ld size %ld iBoardIdx %ld\n", iCur, m_vParent.size(), iBoardIdx);
                             m_bFound = true;
                             return true;
                         }
@@ -136,6 +139,7 @@ printf("iCur %ld size %ld\n", iCur, m_vParent.size());
             }
             ++iCur;
         }
+//printf("iCur %ld size %ld\n", iCur, m_vParent.size());
         return false;
     }
     void print() const
@@ -156,6 +160,26 @@ printf("iCur %ld size %ld\n", iCur, m_vParent.size());
         reverse(sAns.begin(), sAns.end() - 1);
         puts(sAns.c_str());
     }
+    bool isSolvable() const
+    {
+        vector<char> vList;
+        vList.reserve(8);
+        for(int i = 0; i < 3; ++i)
+        {
+            for(int j = 0; j < 3; ++j)
+            {
+                if('x' != m_vOrig[i][j])
+                {
+                    vList.push_back(m_vOrig[i][j]);
+                }
+            }
+        }
+        if((Permutation<8, char>::calcInversion(vList) % 2) == 0)
+        {
+            return true;
+        }
+        return false;
+    }
 
 private:
     enum EN_DIR
@@ -166,52 +190,16 @@ private:
         E_LEFT,
         E_DIR_MAX
     };
-    struct Priority
-    {
-        EN_DIR enDir;
-        int iScore;
-        Board* pBoard;
-        bool operator<(const Priority& rhs) const
-        {
-            return (iScore > rhs.iScore);
-        }
-    };
 
     static const char acUrdl[];
     static const int aiDir[][2];
     Board m_vOrig;
-    vector<char> m_vSolution;
     bool m_bFound;
     vector<Board> m_vBoardStep;
     vector<int> m_vParent;
     vector<EN_DIR> m_vDir;
+    vector<bool> m_bVisited;
 
-    bool _checkCycle(const Board& board, int depth) const
-    {
-        for(int i = 0; i <= depth; ++i)
-        {
-            if(m_vBoardStep[i] == board)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-    int _calcScore(const Board& board) const
-    {
-        int iRet = 0;
-        for(int i = 0; i < 3; ++i)
-        {
-            for(int j = 0; j < 3; ++j)
-            {
-                if((i * 3 + j + '1') == board[i][j])
-                {
-                    ++iRet;
-                }
-            }
-        }
-        return iRet;
-    }
     void _findX(const Board& board, int& iX, int& iY) const
     {
         for(iX = 0; iX < 3; ++iX)
@@ -224,6 +212,18 @@ private:
                 }
             }
         }
+    }
+    int _calcBoardIdx(const Board& board)
+    {
+        vector<char> vList(9, '0');
+        for(int i = 0; i < 3; ++i)
+        {
+            for(int j = 0; j < 3; ++j)
+            {
+                vList[i * 3 + j] = board[i][j];
+            }
+        }
+        return Permutation<9, char>::calcIndex(vList);
     }
     void _print(const Board& board) const
     {
@@ -252,12 +252,17 @@ int main()
         {
             cin >> vPzl[j];
         }
-        Puzzle pzl(vPzl);
-        pzl.solveBfs();
         if(i > 0)
         {
             puts("");
         }
+        Puzzle pzl(vPzl);
+        if(pzl.isSolvable() == false)
+        {
+            puts("unsolvable");
+            continue;
+        }
+        pzl.solveBfs();
         pzl.print();
     }
     return 0;
