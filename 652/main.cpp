@@ -141,7 +141,7 @@ public:
             sAns += acUrdl[m_vDir[iBoardIdx]];
             iBoardIdx = m_vParent[iBoardIdx];
         }
-        reverse(sAns.begin(), sAns.end() - 1);
+        reverse(sAns.begin(), sAns.end());
         puts(sAns.c_str());
     }
 
@@ -200,7 +200,7 @@ private:
     }
 };
 
-const char Puzzle::acUrdl[] = {'u', 'r', 'd', 'l'};
+const char Puzzle::acUrdl[] = {'d', 'l', 'u', 'r'};
 const int Puzzle::aiDir[][2] = { {-1, 0}, {0, 1}, {1, 0}, {0, -1}};
 
 int main()
