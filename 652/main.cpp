@@ -23,18 +23,25 @@ struct Factory<0>
     static const unsigned int VALUE = 1;
 };
 
-static const unsigned int s_auFact[10] = 
+template<unsigned int N, class T, template<unsigned int> class U >
+struct Array
 {
-    Factory<0>::VALUE,
-    Factory<1>::VALUE,
-    Factory<2>::VALUE,
-    Factory<3>::VALUE,
-    Factory<4>::VALUE,
-    Factory<5>::VALUE,
-    Factory<6>::VALUE,
-    Factory<7>::VALUE,
-    Factory<8>::VALUE,
-    Factory<9>::VALUE
+    T value[N];
+    static void Fill(T* pT)
+    {
+        pT[N - 1] = U<N - 1>::VALUE;
+        Array<N - 1, T, U>::Fill(pT);
+    }
+    Array()
+    {
+        Fill(value);
+    }
+};
+template<class T, template<unsigned int> class U>
+struct Array<0, T, U>
+{
+    Array() {}
+    static void Fill(T* pT) {}
 };
 
 template<unsigned int N, class T>
@@ -43,10 +50,11 @@ class Permutation
 public:
     static unsigned int calcIndex(const vector<T>& vSeq)
     {
+        const static Array<10, unsigned int, Factory> s_auFact;
         unsigned int iRet = 0;
         for(unsigned int i = 0; i < N; ++i)
         {
-            iRet += s_auFact[N - i - 1] *
+            iRet += s_auFact.value[N - i - 1] *
                 _getGtCount(vSeq[i], vSeq.begin() + i + 1, vSeq.end());
         }
         return iRet;
@@ -141,7 +149,6 @@ public:
             sAns += acUrdl[m_vDir[iBoardIdx]];
             iBoardIdx = m_vParent[iBoardIdx];
         }
-        reverse(sAns.begin(), sAns.end());
         puts(sAns.c_str());
     }
 
