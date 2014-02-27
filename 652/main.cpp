@@ -1,6 +1,9 @@
 /********************************************************************
  * 652 - Eight, OVa Online Judge
  * http://uva.onlinejudge.org/external/6/652.html
+ * Remark:
+ * 1. For unsolvable-checking, see
+ *    http://mathworld.wolfram.com/15Puzzle.html
  ********************************************************************/
 #include <iostream>
 #include <vector>
@@ -48,15 +51,6 @@ public:
         }
         return iRet;
     }
-    static unsigned int calcInversion(const vector<T>& vSeq)
-    {
-        unsigned int iRet = 0;
-        for(unsigned int i = 0; i < N; ++i)
-        {
-            iRet += _getGtCount(vSeq[i], vSeq.begin() + i + 1, vSeq.end());
-        }
-        return iRet;
-    }
 private:
     typedef typename vector<T>::const_iterator Iterator;
     static unsigned int _getGtCount(const T& val, Iterator first, Iterator last)
@@ -77,38 +71,37 @@ class Puzzle
 {
 public:
     typedef vector< vector< char> > Board;
-    explicit Puzzle(const vector<char>& vIn) :
-        m_vOrig(3, vector<char>(3, '0')),
-        m_bFound(false),
+    explicit Puzzle() :
+        m_vEnd(3, vector<char>(3, '0')),
         m_vBoardStep(),
-        m_vParent(),
-        m_vDir(),
-        m_bVisited(Factory<9>::VALUE, false)
+        m_vParent(Factory<9>::VALUE, -1),
+        m_vDir(Factory<9>::VALUE, E_DIR_MAX)
     {
         for(int i = 0; i < 3; ++i)
         {
             for(int j = 0; j < 3; ++j)
             {
-                m_vOrig[i][j] = vIn[i * 3 + j];
+                m_vEnd[i][j] = i * 3 + j + '1';
             }
         }
+        m_vEnd[2][2] = 'x';
     }
-    bool solveBfs()
+    void build()
     {
         // Init
-        m_vBoardStep.resize(1);
-        m_vParent.resize(1);
-        m_vDir.resize(1);
-        m_vBoardStep[0] = m_vOrig;
-        m_vParent[0] = -1;
-        m_vDir[0] = E_DIR_MAX;
-        m_bFound = false;
+        m_vBoardStep.reserve(Factory<9>::VALUE);
+        m_vBoardStep.push_back(m_vEnd);
+
         // BFS
         int iCur = 0;
+        int iRootIdx = _calcBoardIdx(m_vBoardStep[0]);
+        m_vParent[iRootIdx] = iRootIdx;
+        m_vDir[iRootIdx] = E_DIR_MAX;
         while(iCur < m_vBoardStep.size())
         {
             Board board(m_vBoardStep[iCur]);
             int iX = 0, iY = 0;
+            int iParentIdx = _calcBoardIdx(board);
             _findX(board, iX, iY);
 //_print(board);
 //printf("iCur %ld x %ld y %ld iBoardIdx %ld\n", iCur, iX, iY, _calcBoardIdx(board));
@@ -120,65 +113,36 @@ public:
                 {
                     swap(board[iX][iY], board[iX2][iY2]);
                     int iBoardIdx = _calcBoardIdx(board);
-                    if(false == m_bVisited[iBoardIdx])
+                    if(-1 == m_vParent[iBoardIdx])
                     {
                         m_vBoardStep.push_back(board);
-                        m_vParent.push_back(iCur);
-                        m_vDir.push_back((EN_DIR)d);
-                        m_bVisited[iBoardIdx] = true;
-                        if(0 == iBoardIdx)
-                        {
-//_print(board);
-//printf("iCur %ld size %ld iBoardIdx %ld\n", iCur, m_vParent.size(), iBoardIdx);
-                            m_bFound = true;
-                            return true;
-                        }
+                        m_vParent[iBoardIdx] = iParentIdx;
+                        m_vDir[iBoardIdx] = (EN_DIR)d;
                     }
                     swap(board[iX][iY], board[iX2][iY2]);
                 }
             }
             ++iCur;
         }
-//printf("iCur %ld size %ld\n", iCur, m_vParent.size());
-        return false;
+//printf("iCur %ld size %ld\n", iCur, m_vBoardStep.size());
     }
-    void print() const
+    void print(const Board& board) const
     {
-        if(false == m_bFound)
+        int iBoardIdx = _calcBoardIdx(board);
+        if(-1 == m_vParent[iBoardIdx])
         {
             puts("unsolvable");
             return;
         }
         // Back-tracking
-        int iCur = m_vBoardStep.size() - 1;
         string sAns;
-        while(iCur >= 0)
+        while(iBoardIdx != m_vParent[iBoardIdx])
         {
-            sAns += acUrdl[m_vDir[iCur]];
-            iCur = m_vParent[iCur];
+            sAns += acUrdl[m_vDir[iBoardIdx]];
+            iBoardIdx = m_vParent[iBoardIdx];
         }
         reverse(sAns.begin(), sAns.end() - 1);
         puts(sAns.c_str());
-    }
-    bool isSolvable() const
-    {
-        vector<char> vList;
-        vList.reserve(8);
-        for(int i = 0; i < 3; ++i)
-        {
-            for(int j = 0; j < 3; ++j)
-            {
-                if('x' != m_vOrig[i][j])
-                {
-                    vList.push_back(m_vOrig[i][j]);
-                }
-            }
-        }
-        if((Permutation<8, char>::calcInversion(vList) % 2) == 0)
-        {
-            return true;
-        }
-        return false;
     }
 
 private:
@@ -193,12 +157,10 @@ private:
 
     static const char acUrdl[];
     static const int aiDir[][2];
-    Board m_vOrig;
-    bool m_bFound;
+    Board m_vEnd;
     vector<Board> m_vBoardStep;
     vector<int> m_vParent;
     vector<EN_DIR> m_vDir;
-    vector<bool> m_bVisited;
 
     void _findX(const Board& board, int& iX, int& iY) const
     {
@@ -213,7 +175,7 @@ private:
             }
         }
     }
-    int _calcBoardIdx(const Board& board)
+    int _calcBoardIdx(const Board& board) const
     {
         vector<char> vList(9, '0');
         for(int i = 0; i < 3; ++i)
@@ -243,27 +205,25 @@ const int Puzzle::aiDir[][2] = { {-1, 0}, {0, 1}, {1, 0}, {0, -1}};
 
 int main()
 {
+    Puzzle pzl;
+    pzl.build();
     int iNumCase = 0;
     cin >> iNumCase;
     for(int i = 0; i < iNumCase; ++i)
     {
-        vector<char> vPzl(9, '0');
-        for(int j = 0; j < 9; ++j)
+        vector< vector<char> > vPzl(3, vector<char>(3, '0'));
+        for(int j = 0; j < 3; ++j)
         {
-            cin >> vPzl[j];
+            for(int k = 0; k < 3; ++k)
+            {
+                cin >> vPzl[j][k];
+            }
         }
         if(i > 0)
         {
             puts("");
         }
-        Puzzle pzl(vPzl);
-        if(pzl.isSolvable() == false)
-        {
-            puts("unsolvable");
-            continue;
-        }
-        pzl.solveBfs();
-        pzl.print();
+        pzl.print(vPzl);
     }
     return 0;
 }
