@@ -4,6 +4,12 @@
  * Remark:
  * 1. For unsolvable-checking, see
  *    http://mathworld.wolfram.com/15Puzzle.html
+ * 2. Numbering all permutation of size N by
+ *        index(p) = sum{ (N - i -1)! * inv(p, i), 0 <= i < N },
+ *    where inv is "permutation inversion count"
+ *        inv(p, k) = count{ p[k] > p[i], for all k < i < N }
+ * 3. Build all possible solutions by BFS and index it.
+ * 4. Check the input and back-track in index.
  ********************************************************************/
 #include <iostream>
 #include <vector>
